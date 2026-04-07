@@ -136,34 +136,16 @@
         float dCore = smoothstep(0.035, 0.0, dShape) * dVis;
         float dGlow = exp(-length(dPos_uv) * 85.0) * dVis; 
         
-        // --- 1b. Impact Splashes & Shards ---
+        // --- 1b. Impact Splashes (Shards removed) ---
         float impactFade = saturate((globalT - 0.28) * 4.0);
         float splash = (impactFade > 0.0) ? exp(-impactFade * 6.0) : 0.0;
         vec2 impactPos = uv - vec2(targetX, barY_uv);
-        float impactAngle = atan(impactPos.y, impactPos.x);
         float distCol = length(impactPos);
-        
-        float shards = 0.0;
-        if (impactFade > 0.01 && impactFade < 1.0) {
-            float shardPath = distCol - (impactFade * (0.6 + rand(vec2(cycleID, 1.0)) * 0.4));
-            float shardW = 0.008 + impactFade * 0.05;
-            float rSeed = cycleID + floor(targetX * 100.0);
-            float r1 = rand(vec2(rSeed, 11.0)) * 0.6 - 0.3;
-            float r2 = rand(vec2(rSeed, 12.0)) * 0.6 - 0.3;
-            float r3 = rand(vec2(rSeed, 13.0)) * 0.6 - 0.3;
-            float r4 = rand(vec2(rSeed, 14.0)) * 0.6 - 0.3;
-
-            shards = smoothstep(shardW, 0.0, abs(impactAngle - (PI*0.35 + r1))) + 
-                     smoothstep(shardW, 0.0, abs(impactAngle - (PI*0.48 + r2))) + 
-                     smoothstep(shardW, 0.0, abs(impactAngle - (PI*0.52 + r3))) +
-                     smoothstep(shardW, 0.0, abs(impactAngle - (PI*0.65 + r4)));
-            shards *= smoothstep(0.08, 0.0, abs(shardPath)) * splash;
-        }
 
         // --- 2. THE CORE & SCENE ---
         vec2 sceneUv = (uv - vec2(0.0, 0.4)) * 1.25; // Shifted to 0.4
         vec3 col = mix(vec3(0.0, 0.95, 1.0), vec3(1.6), dCore) * (dGlow * 1.0 + dCore * 9.0); 
-        col += vec3(0.0, 0.95, 1.0) * (shards * 4.5 + exp(-distCol * 35.0) * splash * 2.5); 
+        col += vec3(0.0, 0.95, 1.0) * (exp(-distCol * 35.0) * splash * 2.5); 
         
         bool isBuckyZone = length(sceneUv) < 1.2;
         if (isBuckyZone) {
@@ -206,13 +188,18 @@
         float dyL = abs(vUv.y - barY);
         float lG = exp(-dxL * 12.0) * exp(-dyL * 20.0);
         
+        // MOUSE RESPONSIVENESS RESTORED
+        float dxM = abs(vUv.x - iMouse.x) * aspect;
+        float dyM = abs(vUv.y - barY);
+        float mD = exp(-dxM * 6.5) * exp(-dyM * 30.0);
+
         // REFINED PLUNGE (Clean and Toned down)
         float impactUvX = 0.5; // Fixed to middle
         float distToImpactX = abs(vUv.x - impactUvX) * actualBarW * numCells;
         float plunge = smoothstep(0.9, 0.0, distToImpactX) * splash * 1.8; 
         float impactFlash = exp(-distToImpactX * 3.5) * splash * 1.2; 
         
-        vec2 uv_bar = vec2((vUv.x - startX) / actualBarW, (vUv.y - barY + plunge * 0.025) / barH + 0.5);
+        vec2 uv_bar = vec2((vUv.x - startX) / actualBarW, (vUv.y - barY + plunge * 0.025) / (barH * (1.0 + mD * 1.8)) + 0.5);
         
         float aa = 2.0 / iResolution.y; 
         float barM = smoothstep(0.0, aa, uv_bar.x) * smoothstep(1.0, 1.0 - aa, uv_bar.x) *
@@ -236,6 +223,7 @@
         }
         
         col += lG * 0.22 * (0.4 + violentPeak * 2.1) * vec3(0.0, 0.95, 1.0);
+        col += mD * 0.05 * vec3(0.0, 0.95, 1.0);
 
         float alpha = (uLoadProgress > 1.0) ? 1.0 - smoothstep(0.0, 1.0, uLoadProgress - 1.0) : 1.0;
         gl_FragColor = vec4(pow(max(col, 0.0), vec3(1./2.2)), alpha);
