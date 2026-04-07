@@ -97,10 +97,8 @@
     }
 
     vec2 getDropPos(float t, float cycleID, float targetX, float barY) {
-        float t_acc = pow(t, 1.5);
-        float swing = sin(t * PI) * 0.15 * (rand(vec2(cycleID, 7.0)) * 2.0 - 1.0);
-        float x = mix(0.0, targetX, pow(t, 0.8)) + swing;
-        float y = mix(0.4, barY, t); // Start at 0.4
+        float x = targetX; 
+        float y = mix(0.4, barY, pow(t, 1.5)); // Natural acceleration
         return vec2(x, y);
     }
 
