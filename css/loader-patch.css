@@ -95,7 +95,7 @@
 
 /* LCP SKELETON: Fires sub-second main content paint */
 #skeleton-lcp {
-    position: fixed;
+    position: fixed !important;
     top: 50%;
     left: 0 !important;
     width: 100% !important;

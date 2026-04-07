@@ -116,8 +116,8 @@
         float breathe = (1. - pow(1. - min(globalT * 1.85, 1.0), 24.0)) * (1. - pow(min(globalT * 1.85, 1.0), 2.5));
         float violentPeak = pow(breathe, 0.5);
 
-        // --- INTERACTIVE MOUSE TARGETING ---
-        float targetX = clamp((iMouse.x * 2.0 - 1.0) * aspect, -0.6, 0.6);
+        // --- NO LONGER MOUSE TARGETED - FIXED TO MIDDLE ---
+        float targetX = 0.0;
         float barY_uv = -0.84; 
 
         // --- 1. THE DROpleT PHYSICS ---
@@ -205,17 +205,14 @@
         float dxL = abs(vUv.x - leadX) * aspect;
         float dyL = abs(vUv.y - barY);
         float lG = exp(-dxL * 12.0) * exp(-dyL * 20.0);
-        float dxM = abs(vUv.x - iMouse.x) * aspect;
-        float dyM = abs(vUv.y - barY);
-        float mD = exp(-dxM * 6.5) * exp(-dyM * 30.0);
         
         // REFINED PLUNGE (Clean and Toned down)
-        float impactUvX = (targetX / aspect + 1.0) * 0.5;
+        float impactUvX = 0.5; // Fixed to middle
         float distToImpactX = abs(vUv.x - impactUvX) * actualBarW * numCells;
         float plunge = smoothstep(0.9, 0.0, distToImpactX) * splash * 1.8; 
         float impactFlash = exp(-distToImpactX * 3.5) * splash * 1.2; 
         
-        vec2 uv_bar = vec2((vUv.x - startX) / actualBarW, (vUv.y - barY + plunge * 0.025) / (barH * (1.0 + mD * 1.8)) + 0.5);
+        vec2 uv_bar = vec2((vUv.x - startX) / actualBarW, (vUv.y - barY + plunge * 0.025) / barH + 0.5);
         
         float aa = 2.0 / iResolution.y; 
         float barM = smoothstep(0.0, aa, uv_bar.x) * smoothstep(1.0, 1.0 - aa, uv_bar.x) *
@@ -239,7 +236,6 @@
         }
         
         col += lG * 0.22 * (0.4 + violentPeak * 2.1) * vec3(0.0, 0.95, 1.0);
-        col += mD * 0.05 * vec3(0.0, 0.95, 1.0);
 
         float alpha = (uLoadProgress > 1.0) ? 1.0 - smoothstep(0.0, 1.0, uLoadProgress - 1.0) : 1.0;
         gl_FragColor = vec4(pow(max(col, 0.0), vec3(1./2.2)), alpha);

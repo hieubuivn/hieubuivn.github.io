@@ -135,14 +135,11 @@
   <link href="css/layout.css" rel="stylesheet" type="text/css" />
   <link href="css/cv-styles.css" rel="stylesheet" type="text/css" />
   <link href="css/textBoard.css" rel="stylesheet" type="text/css" />
-  <link href="css/loader-patch.css" rel="stylesheet" type="text/css" />
-
-  <!-- FONTS ALREADY PRELOADED IN HEAD -->
-
   <!-- CRITICAL ASSET PRELOAD -->
   <link rel="preload" href="./models/points.glb?v=1.0.0" as="fetch" crossorigin="anonymous" fetchpriority="high">
   <link rel="preload" href="./textures/ktx2/spriteSheet-etc.ktx2?v=1.0.0" as="fetch" crossorigin="anonymous">
   <link rel="preload" href="./textures/spriteSheet.webp?v=1.0.0" as="image" crossorigin>
+
 
   <style id="critical-path-css">
     :root {
@@ -180,7 +177,7 @@
       color: var(--c-cyan);
       opacity: 0.05;
       letter-spacing: 5px;
-      position: fixed;
+      position: fixed !important;
       top: 50%;
       left: 50%;
       transform: translate(-50%, -50%);
@@ -224,7 +221,6 @@
 
 
   <!-- PERFORMANCE: Start parsing logic while assets download -->
-  <link rel="modulepreload" href="/assets/office-Dk_zVdbS.js">
   <script type="importmap">
     {
       "imports": {
@@ -241,7 +237,9 @@
       }
     }
   </script>
-  <script type="module" crossorigin src="/assets/main-ByqC32q7.js"></script>
+  <link rel="modulepreload" href="/assets/office-Dk_zVdbS.js">
+  <link href="css/loader-patch.css" rel="stylesheet" type="text/css" />
+  <script type="module" crossorigin src="/assets/main-BVaOY8Tg.js"></script>
   <link rel="modulepreload" crossorigin href="/assets/office-Cu458fmI.js">
   <link rel="stylesheet" crossorigin href="/assets/main-BwJCZcgi.css">
 </head>
