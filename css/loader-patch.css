@@ -22,7 +22,7 @@
         text-align: center !important;
     }
 
-    #skeleton-lcp-v1 {
+    #skeleton-lcp-v2 {
         left: 0 !important;
         width: 100% !important;
         font-size: clamp(1rem, 2.8vw, 3rem) !important;
@@ -54,7 +54,7 @@
     }
 }
 .mobile-mode #loading-container,
-.mobile-mode #skeleton-lcp-v1 {
+.mobile-mode #skeleton-lcp-v2 {
     display: none !important;
 }
 
