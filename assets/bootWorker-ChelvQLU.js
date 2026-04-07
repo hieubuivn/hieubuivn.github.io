@@ -157,6 +157,12 @@
         vec3 col = mix(vec3(0.0, 0.95, 1.0), vec3(1.6), dCore) * (dGlow * 1.0 + dCore * 9.0); 
         col += vec3(0.0, 0.95, 1.0) * (rippleIntensity * 1.2 + exp(-distCol * 35.0) * splash * 2.5); 
         
+        // --- 2b. Digital Materialization Logic ---
+        float entryT = saturate(iTime * 0.8); // Global entry (1.25s total)
+        float matFade = saturate(iTime * 0.6 - 0.2); // Mesh reveal starts slightly later
+        float noise = rand(fragCoord.xy * 0.01 + fract(iTime * 0.02));
+        float materializationMask = smoothstep(noise - 0.1, noise + 0.1, matFade * 1.2);
+
         bool isBuckyZone = length(sceneUv) < 1.2;
         if (isBuckyZone) {
             vec3 camPos = vec3(0,0,3.2), rayDir = normalize(vec3(sceneUv,-4)), rayPos = camPos;
@@ -168,13 +174,18 @@
                 if (rayLen > 4.5) break;
             }
             if (hit) {
+                // Apply materialization to the hit
                 vec3 n = calcNormal(rayPos);
                 float diff = max(dot(n, normalize(vec3(0.6, 1.0, 0.8))), 0.0);
                 float rim = pow(1.0 - max(dot(n, -rayDir), 0.0), 2.5);
                 vec3 base = vec3(diff * 1.2 + rim * 0.8 + 0.2);
                 vec3 cyan = vec3(0.0, 0.95, 1.0) * (diff * 0.5 + rim * 1.5);
-                col = mix(base, cyan, uLoadProgress * 0.8);
+                vec3 buckyCol = mix(base, cyan, uLoadProgress * 0.8);
+                
+                // Noise Dissolve / Materialize
+                col = mix(col, buckyCol, materializationMask);
             }
+            
             float coreDist = length(sceneUv);
             float microPulse = sin(iTime * 15.0) * 0.03 + 0.97;
             float loadI = smoothstep(0.0, 1.0, uLoadProgress);
@@ -186,7 +197,9 @@
             coreC *= (rand(vec2(iTime, 0.0)) > 0.97 ? 1.5 : 1.0);
             float flare = exp(-coreDist * bF) * 3.8 * microPulse * bI;
             float aura = exp(-coreDist * (bF * 0.4)) * (0.01 + saturate(violentPeak * 0.8 + loadI * 0.4) * 0.8);
-            col += (coreC * (flare + aura) * smoothstep(1.0, 0.5, coreDist)) * rev * (hit && rayPos.z < 0.2 ? 1.0 : hit ? 0.0 : 1.0);
+            
+            // Core also materializes
+            col += (coreC * (flare + aura) * smoothstep(1.0, 0.5, coreDist)) * rev * materializationMask * (hit && rayPos.z < 0.2 ? 1.0 : hit ? 0.0 : 1.0);
         }
 
         // 3. THE LOADING BAR ZONE
@@ -234,6 +247,6 @@
         col += mD * 0.05 * vec3(0.0, 0.95, 1.0);
 
         float alpha = (uLoadProgress > 1.0) ? 1.0 - smoothstep(0.0, 1.0, uLoadProgress - 1.0) : 1.0;
-        gl_FragColor = vec4(pow(max(col, 0.0), vec3(1./2.2)), alpha);
+        gl_FragColor = vec4(pow(max(col * entryT, 0.0), vec3(1./2.2)), alpha);
     }
 `)),e.linkProgram(n),e.useProgram(n);let o=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,o),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW);let s=e.getAttribLocation(n,`position`);e.enableVertexAttribArray(s),e.vertexAttribPointer(s,2,e.FLOAT,!1,0,0),r.iTime=e.getUniformLocation(n,`iTime`),r.iResolution=e.getUniformLocation(n,`iResolution`),r.iMouse=e.getUniformLocation(n,`iMouse`),r.uLoadProgress=e.getUniformLocation(n,`uLoadProgress`),r.uQuality=e.getUniformLocation(n,`uQuality`),r.uImpactX=e.getUniformLocation(n,`uImpactX`),t=performance.now(),requestAnimationFrame(g)}let o=0,s=0,c={x:.5,y:.5},l={x:.5,y:.5},u={w:0,h:0},d=1,f=1,p=0,m=-1,h=.5;function g(n){if(!e)return;let i=(n-t)/1e3,a=(n-p)/1e3;p=n;let _=Math.floor(i/3);_!==m&&(m=_,h=l.x),o+=(s-o)*.05,f=a>.018?Math.max(.1,f-.25):Math.min(1,f+.01),d+=(f-d)*.1,l.x+=(c.x-l.x)*.08,l.y+=(c.y-l.y)*.08,e.uniform1f(r.iTime,i),e.uniform2f(r.iResolution,u.w,u.h),e.uniform2f(r.iMouse,l.x,l.y),e.uniform1f(r.uLoadProgress,o),e.uniform1f(r.uQuality,d),e.uniform1f(r.uImpactX,h),e.drawArrays(e.TRIANGLE_STRIP,0,4),requestAnimationFrame(g)}self.onmessage=t=>{let{type:n,payload:r}=t.data;n===`INIT`?(u.w=r.width,u.h=r.height,a(r.canvas),e.viewport(0,0,u.w,u.h)):n===`RESIZE`?(u.w=r.width,u.h=r.height,e&&(e.canvas.width=u.w,e.canvas.height=u.h,e.viewport(0,0,u.w,u.h))):n===`UPDATE_PROGRESS`?s=r:n===`MOUSE`&&(c.x=r.x,c.y=r.y)}})();
