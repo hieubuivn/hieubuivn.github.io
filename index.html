@@ -135,11 +135,14 @@
   <link href="css/layout.css" rel="stylesheet" type="text/css" />
   <link href="css/cv-styles.css" rel="stylesheet" type="text/css" />
   <link href="css/textBoard.css" rel="stylesheet" type="text/css" />
+  <link href="css/loader-patch.css" rel="stylesheet" type="text/css" />
+
+  <!-- FONTS ALREADY PRELOADED IN HEAD -->
+
   <!-- CRITICAL ASSET PRELOAD -->
   <link rel="preload" href="./models/points.glb?v=1.0.0" as="fetch" crossorigin="anonymous" fetchpriority="high">
   <link rel="preload" href="./textures/ktx2/spriteSheet-etc.ktx2?v=1.0.0" as="fetch" crossorigin="anonymous">
   <link rel="preload" href="./textures/spriteSheet.webp?v=1.0.0" as="image" crossorigin>
-
 
   <style id="critical-path-css">
     :root {
@@ -171,28 +174,25 @@
     }
 
     #skeleton-lcp {
-    position: fixed !important;
-    top: 50%;
-    left: 0 !important;
-    width: 100% !important;
-    transform: translateY(-50%) !important;
-    text-align: center !important;
-    font-family: 'Orbitron', 'Fira Code', 'Roboto Mono', sans-serif;
-    font-size: clamp(1rem, 2.8vw, 3rem);
-    font-weight: 900;
-    letter-spacing: clamp(0.05rem, 0.2vw, 0.4rem);
-    color: rgba(0, 243, 255, 0.015);
-    /* Subtle enough but still traceable by LCP engines */
-    text-transform: uppercase;
-    pointer-events: none;
-    z-index: 100001 !important;
-    user-select: none;
-    line-height: 1.2;
-    white-space: normal;
-    text-overflow: clip;
-    transition: opacity 1s ease-out;
-    opacity: 1 !important;
-}
+      font-family: var(--font-tech);
+      font-size: clamp(1.2rem, 4vw, 2.5rem);
+      font-weight: 800;
+      color: var(--c-cyan);
+      opacity: 0.05;
+      letter-spacing: 5px;
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100vw;
+      text-align: center;
+      z-index: -1;
+      text-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+      pointer-events: none;
+      user-select: none;
+      animation: lcp-fade-out 3s forwards ease-in-out;
+      animation-delay: 2s;
+    }
 
     @keyframes lcp-fade-out {
       0% {
@@ -224,6 +224,7 @@
 
 
   <!-- PERFORMANCE: Start parsing logic while assets download -->
+  <link rel="modulepreload" href="/assets/office-BLo08WV4.js">
   <script type="importmap">
     {
       "imports": {
@@ -240,10 +241,8 @@
       }
     }
   </script>
-  <link rel="modulepreload" href="/assets/office-Dk_zVdbS.js">
-  <link href="css/loader-patch.css" rel="stylesheet" type="text/css" />
-  <script type="module" crossorigin src="/assets/main-BOIGsBng.js"></script>
-  <link rel="modulepreload" crossorigin href="/assets/office-Cu458fmI.js">
+  <script type="module" crossorigin src="/assets/main-DcFbAGr-.js"></script>
+  <link rel="modulepreload" crossorigin href="/assets/office-BuXtQt9d.js">
   <link rel="stylesheet" crossorigin href="/assets/main-BwJCZcgi.css">
 </head>
 

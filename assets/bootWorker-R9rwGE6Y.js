@@ -12,6 +12,7 @@
     uniform vec2 iMouse;
     uniform float uLoadProgress;
     uniform float uQuality; 
+    uniform float uImpactX;
     varying vec2 vUv;
 
     #define PI 3.14159265359
@@ -97,8 +98,10 @@
     }
 
     vec2 getDropPos(float t, float cycleID, float targetX, float barY) {
-        float x = targetX; 
-        float y = mix(0.4, barY, pow(t, 1.5)); // Natural acceleration
+        float t_acc = pow(t, 1.5);
+        float swing = sin(t * PI) * 0.15 * (rand(vec2(cycleID, 7.0)) * 2.0 - 1.0);
+        float x = mix(0.0, targetX, pow(t, 0.8)) + swing;
+        float y = mix(0.4, barY, t); // Start at 0.4
         return vec2(x, y);
     }
 
@@ -114,8 +117,8 @@
         float breathe = (1. - pow(1. - min(globalT * 1.85, 1.0), 24.0)) * (1. - pow(min(globalT * 1.85, 1.0), 2.5));
         float violentPeak = pow(breathe, 0.5);
 
-        // --- NO LONGER MOUSE TARGETED - FIXED TO MIDDLE ---
-        float targetX = 0.0;
+        // --- INTERACTIVE MOUSE TARGETING (LOCKED PER CYCLE) ---
+        float targetX = clamp((uImpactX * 2.0 - 1.0) * aspect, -0.6, 0.6);
         float barY_uv = -0.84; 
 
         // --- 1. THE DROpleT PHYSICS ---
@@ -134,16 +137,25 @@
         float dCore = smoothstep(0.035, 0.0, dShape) * dVis;
         float dGlow = exp(-length(dPos_uv) * 85.0) * dVis; 
         
-        // --- 1b. Impact Splashes (Shards removed) ---
+        // --- 1b. Impact Splashes & Data Pulse ---
         float impactFade = saturate((globalT - 0.28) * 4.0);
         float splash = (impactFade > 0.0) ? exp(-impactFade * 6.0) : 0.0;
         vec2 impactPos = uv - vec2(targetX, barY_uv);
         float distCol = length(impactPos);
+        
+        // Option A: Quantum Ripple (Radial Shockwave) - Refined: Ultra-subtle, Upwards only
+        float rippleSpeed = 1.6;
+        float rippleRadius = impactFade * rippleSpeed;
+        float rippleWidth = 0.005 + impactFade * 0.005;
+        float rippleIntensity = smoothstep(rippleRadius + rippleWidth, rippleRadius, distCol) * 
+                               smoothstep(rippleRadius - rippleWidth, rippleRadius, distCol) * 
+                               smoothstep(-0.02, 0.0, uv.y - barY_uv) * // Only show above impact point
+                               exp(-impactFade * 30.0);
 
         // --- 2. THE CORE & SCENE ---
         vec2 sceneUv = (uv - vec2(0.0, 0.4)) * 1.25; // Shifted to 0.4
         vec3 col = mix(vec3(0.0, 0.95, 1.0), vec3(1.6), dCore) * (dGlow * 1.0 + dCore * 9.0); 
-        col += vec3(0.0, 0.95, 1.0) * (exp(-distCol * 35.0) * splash * 2.5); 
+        col += vec3(0.0, 0.95, 1.0) * (rippleIntensity * 1.2 + exp(-distCol * 35.0) * splash * 2.5); 
         
         bool isBuckyZone = length(sceneUv) < 1.2;
         if (isBuckyZone) {
@@ -185,14 +197,12 @@
         float dxL = abs(vUv.x - leadX) * aspect;
         float dyL = abs(vUv.y - barY);
         float lG = exp(-dxL * 12.0) * exp(-dyL * 20.0);
-        
-        // MOUSE RESPONSIVENESS RESTORED
         float dxM = abs(vUv.x - iMouse.x) * aspect;
         float dyM = abs(vUv.y - barY);
         float mD = exp(-dxM * 6.5) * exp(-dyM * 30.0);
-
+        
         // REFINED PLUNGE (Clean and Toned down)
-        float impactUvX = 0.5; // Fixed to middle
+        float impactUvX = (targetX / aspect + 1.0) * 0.5;
         float distToImpactX = abs(vUv.x - impactUvX) * actualBarW * numCells;
         float plunge = smoothstep(0.9, 0.0, distToImpactX) * splash * 1.8; 
         float impactFlash = exp(-distToImpactX * 3.5) * splash * 1.2; 
@@ -226,4 +236,4 @@
         float alpha = (uLoadProgress > 1.0) ? 1.0 - smoothstep(0.0, 1.0, uLoadProgress - 1.0) : 1.0;
         gl_FragColor = vec4(pow(max(col, 0.0), vec3(1./2.2)), alpha);
     }
-`)),e.linkProgram(n),e.useProgram(n);let o=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,o),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW);let s=e.getAttribLocation(n,`position`);e.enableVertexAttribArray(s),e.vertexAttribPointer(s,2,e.FLOAT,!1,0,0),r.iTime=e.getUniformLocation(n,`iTime`),r.iResolution=e.getUniformLocation(n,`iResolution`),r.iMouse=e.getUniformLocation(n,`iMouse`),r.uLoadProgress=e.getUniformLocation(n,`uLoadProgress`),r.uQuality=e.getUniformLocation(n,`uQuality`),t=performance.now(),requestAnimationFrame(m)}let o=0,s=0,c={x:.5,y:.5},l={x:.5,y:.5},u={w:0,h:0},d=1,f=1,p=0;function m(n){if(!e)return;let i=(n-t)/1e3,a=(n-p)/1e3;p=n,o+=(s-o)*.05,f=a>.018?Math.max(.1,f-.25):Math.min(1,f+.01),d+=(f-d)*.1,l.x+=(c.x-l.x)*.08,l.y+=(c.y-l.y)*.08,e.uniform1f(r.iTime,i),e.uniform2f(r.iResolution,u.w,u.h),e.uniform2f(r.iMouse,l.x,l.y),e.uniform1f(r.uLoadProgress,o),e.uniform1f(r.uQuality,d),e.drawArrays(e.TRIANGLE_STRIP,0,4),requestAnimationFrame(m)}self.onmessage=t=>{let{type:n,payload:r}=t.data;n===`INIT`?(u.w=r.width,u.h=r.height,a(r.canvas),e.viewport(0,0,u.w,u.h)):n===`RESIZE`?(u.w=r.width,u.h=r.height,e&&(e.canvas.width=u.w,e.canvas.height=u.h,e.viewport(0,0,u.w,u.h))):n===`UPDATE_PROGRESS`?s=r:n===`MOUSE`&&(c.x=r.x,c.y=r.y)}})();
+`)),e.linkProgram(n),e.useProgram(n);let o=e.createBuffer();e.bindBuffer(e.ARRAY_BUFFER,o),e.bufferData(e.ARRAY_BUFFER,new Float32Array([-1,-1,1,-1,-1,1,1,1]),e.STATIC_DRAW);let s=e.getAttribLocation(n,`position`);e.enableVertexAttribArray(s),e.vertexAttribPointer(s,2,e.FLOAT,!1,0,0),r.iTime=e.getUniformLocation(n,`iTime`),r.iResolution=e.getUniformLocation(n,`iResolution`),r.iMouse=e.getUniformLocation(n,`iMouse`),r.uLoadProgress=e.getUniformLocation(n,`uLoadProgress`),r.uQuality=e.getUniformLocation(n,`uQuality`),r.uImpactX=e.getUniformLocation(n,`uImpactX`),t=performance.now(),requestAnimationFrame(g)}let o=0,s=0,c={x:.5,y:.5},l={x:.5,y:.5},u={w:0,h:0},d=1,f=1,p=0,m=-1,h=.5;function g(n){if(!e)return;let i=(n-t)/1e3,a=(n-p)/1e3;p=n;let _=Math.floor(i/3);_!==m&&(m=_,h=l.x),o+=(s-o)*.05,f=a>.018?Math.max(.1,f-.25):Math.min(1,f+.01),d+=(f-d)*.1,l.x+=(c.x-l.x)*.08,l.y+=(c.y-l.y)*.08,e.uniform1f(r.iTime,i),e.uniform2f(r.iResolution,u.w,u.h),e.uniform2f(r.iMouse,l.x,l.y),e.uniform1f(r.uLoadProgress,o),e.uniform1f(r.uQuality,d),e.uniform1f(r.uImpactX,h),e.drawArrays(e.TRIANGLE_STRIP,0,4),requestAnimationFrame(g)}self.onmessage=t=>{let{type:n,payload:r}=t.data;n===`INIT`?(u.w=r.width,u.h=r.height,a(r.canvas),e.viewport(0,0,u.w,u.h)):n===`RESIZE`?(u.w=r.width,u.h=r.height,e&&(e.canvas.width=u.w,e.canvas.height=u.h,e.viewport(0,0,u.w,u.h))):n===`UPDATE_PROGRESS`?s=r:n===`MOUSE`&&(c.x=r.x,c.y=r.y)}})();

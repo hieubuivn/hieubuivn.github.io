@@ -325,38 +325,11 @@ async function init() {
                 const stateMoved = baseNDC.distanceTo(uData.lastBaseNDC) > 0.0001;
 
                 if (transitioning || stateMoved) {
-                    // --- SYNC MODE: Zero out mouse offset with easing (No Spring, No Linear) ---
-                    if (!uData.mouseOffset) uData.mouseOffset = new THREE.Vector2(0, 0);
-
-                    // If we just entered a transition or the home state moved significantly,
-                    // calculate the current "error" (mouse offset) and animate it to zero.
-                    if (!uData.isTransitioningHome) {
-                        uData.mouseOffset.set(
-                            smoothed.x - baseNDC.x,
-                            smoothed.y - baseNDC.y
-                        );
-
-                        if (uData.settleTween) uData.settleTween.stop();
-
-                        // Easing Requirement: Slow start and end, fast middle (Quadratic.InOut)
-                        uData.settleTween = new TWEEN.Tween(uData.mouseOffset)
-                            .to({ x: 0, y: 0 }, 600) // 0.6s to gracefully return home
-                            .easing(TWEEN.Easing.Quadratic.InOut)
-                            .start();
-
-                        uData.isTransitioningHome = true;
-                        uData.isSettling = true;
-                        uData.settleFrameCount = 0;
-                    }
-
-                    // LOCK: Stay pinned to the moving baseNDC + the closing offset
-                    // This ensures Knowhere keeps up with the UI slot during fast morphs
-                    smoothed.x = baseNDC.x + uData.mouseOffset.x;
-                    smoothed.y = baseNDC.y + uData.mouseOffset.y;
+                    // --- SYNC MODE: Lock 1:1 to the TWEEN during morphs ---
+                    smoothed.copy(baseNDC);
+                    uData.isSettling = true;
+                    uData.settleFrameCount = 0;
                 } else {
-                    // Reset transition state when stationary
-                    uData.isTransitioningHome = false;
-
                     // --- SENTINEL MODE: Settle first, then follow guest ---
                     let targetPos = baseNDC; // Head Home
                     if (!uData.isSettling) {
@@ -365,11 +338,11 @@ async function init() {
                         // Check if we are close enough to Home to start following guest
                         if (smoothed.distanceTo(baseNDC) < 0.005) {
                              uData.settleFrameCount = (uData.settleFrameCount || 0) + 1;
-                             if (uData.settleFrameCount > 40) uData.isSettling = false; // Settle for ~1.3s (at 30Hz)
+                             if (uData.settleFrameCount > 40) uData.isSettling = false; // Settle for ~0.6s
                         }
                     }
 
-                    const followFactor = 0.0015; 
+                    const followFactor = 0.0015; // Increased (2x of previous 0.00075)
                     smoothed.x += (targetPos.x - smoothed.x) * followFactor;
                     smoothed.y += (targetPos.y - smoothed.y) * followFactor;
                 }

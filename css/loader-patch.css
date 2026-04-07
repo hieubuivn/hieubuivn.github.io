@@ -95,7 +95,7 @@
 
 /* LCP SKELETON: Fires sub-second main content paint */
 #skeleton-lcp {
-    position: fixed !important;
+    position: fixed;
     top: 50%;
     left: 0 !important;
     width: 100% !important;
@@ -109,21 +109,10 @@
     /* Subtle enough but still traceable by LCP engines */
     text-transform: uppercase;
     pointer-events: none;
-    z-index: 100001 !important;
+    z-index: 1;
     user-select: none;
     line-height: 1.2;
     white-space: normal;
     text-overflow: clip;
     transition: opacity 1s ease-out;
-    opacity: 1 !important;
-}
-/* ENHANCEMENT: HEADER MARBLE PHYSICS OPTIMIZATION */
-.header-layout {
-    perspective: 1000px;
-}
-
-.header-right {
-    will-change: transform;
-    transition: none !important;
-    transform-style: preserve-3d;
 }
